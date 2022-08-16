@@ -1,8 +1,7 @@
 /*
-     Scrivere un programma che, usando la libreria pthread,
-     sommi gli elementi di una matrice mxn mediante m thread deputati al calcolo delle somme parziali su ciascuna riga. 
-     Ogni thread, inoltre, calcolata la propria somma va ad aggiornare, dopo due secondi, la somma totale. 
-     Un ulteriore thread resta in attesa che ciascun thread abbia finito e quindi riepiloga la somma parziale calcolata da ciascun thread ed il risultato complessivo.
+     Create m threads and a matrix mxn, this threads have to do partial sum on each rows.
+     Each thread after calculate its partial sum, wait two second before update total sum.
+     Another thread is waiting all the threads'task, at the end it checks each thread's partial sum and the final result.
 */
 
 #include <pthread.h>
@@ -14,8 +13,8 @@
 #define M 4
 #define N 4
 
-int sommeParziali[M];
-int risultatoComplessivo =0; 
+int PartialSum[M];
+int FinalResult =0; 
 int **matrix; 
 pthread_mutex_t mutex,mutex1; 
 pthread_cond_t condizione = PTHREAD_COND_INITIALIZER; 
@@ -24,21 +23,21 @@ int attesa = 0;
 void* sommeParz(void* args){
 
         int indice = *((int*)args);
-        sommeParziali[indice]=0; 
+        PartialSum[indice]=0; 
 
 
         pthread_mutex_lock(&mutex);       
-        sommeParziali[attesa]=0; 
+        PartialSum[attesa]=0; 
         int k; 
         for(k=0; k<N; k++){
-            sommeParziali[attesa]+= matrix[indice][k];   
+            PartialSum[attesa]+= matrix[indice][k];   
         }
-        printf("LA SOMMA PARZIALE del thread [%d]---> %d\n",attesa,sommeParziali[attesa]); 
+        printf("PARTIAL SUM OF THREAD [%d]---> %d\n",attesa,PartialSum[attesa]); 
         
         pthread_mutex_unlock(&mutex);
 
         sleep(2);
-        risultatoComplessivo = risultatoComplessivo + sommeParziali[attesa]; 
+        FinalResult = FinalResult + PartialSum[attesa]; 
 
         pthread_mutex_lock(&mutex1); 
         attesa++; 
@@ -59,8 +58,8 @@ void* riepilogo(){
             pthread_cond_wait(&condizione,&mutex1); 
       
 
-        printf("\nTutti i thread hanno terminato\n"); 
-        printf("\nLa somma totale ---> %d\n",risultatoComplessivo); 
+        printf("\nALL THREADS TERMINATED\n"); 
+        printf("\nTOTAL SUM ---> %d\n",FinalResult); 
         
         pthread_mutex_unlock(&mutex1); 
 
